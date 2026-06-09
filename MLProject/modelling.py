@@ -14,7 +14,6 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
 from mlflow.models.signature import infer_signature
 import mlflow
 import mlflow.sklearn
-import dagshub
 
 # ==============================================================================
 # ARGUMENT PARSER
@@ -27,13 +26,17 @@ parser.add_argument('--min_samples_leaf',  type=int, default=1)
 args = parser.parse_args()
 
 # ==============================================================================
-# DAGSHUB + MLFLOW SETUP
+# MLFLOW SETUP — pakai env var, bukan dagshub.init()
 # ==============================================================================
-dagshub.init(
-    repo_owner='siilverred',
-    repo_name='SMSML_Charlene-Silver',
-    mlflow=True
+DAGSHUB_USERNAME = "siilverred"
+DAGSHUB_REPO     = "SMSML_Charlene-Silver"
+
+mlflow.set_tracking_uri(
+    f"https://dagshub.com/{DAGSHUB_USERNAME}/{DAGSHUB_REPO}.mlflow"
 )
+
+os.environ['MLFLOW_TRACKING_USERNAME'] = DAGSHUB_USERNAME
+os.environ['MLFLOW_TRACKING_PASSWORD'] = os.environ.get('DAGSHUB_USER_TOKEN', '')
 
 EXPERIMENT_NAME = "IBM_HR_Attrition_CI"
 mlflow.set_experiment(EXPERIMENT_NAME)
@@ -141,15 +144,15 @@ with mlflow.start_run(run_name="RandomForest_CI_Run") as run:
     prec_macro  = precision_score(y_test, y_pred, average='macro')
     rec_macro   = recall_score(y_test, y_pred, average='macro')
 
-    mlflow.log_metric("accuracy",         acc)
-    mlflow.log_metric("precision",        prec)
-    mlflow.log_metric("recall",           rec)
-    mlflow.log_metric("f1_score",         f1)
-    mlflow.log_metric("roc_auc",          auc)
-    mlflow.log_metric("f1_macro",         f1_macro)
-    mlflow.log_metric("f1_weighted",      f1_weighted)
-    mlflow.log_metric("precision_macro",  prec_macro)
-    mlflow.log_metric("recall_macro",     rec_macro)
+    mlflow.log_metric("accuracy",        acc)
+    mlflow.log_metric("precision",       prec)
+    mlflow.log_metric("recall",          rec)
+    mlflow.log_metric("f1_score",        f1)
+    mlflow.log_metric("roc_auc",         auc)
+    mlflow.log_metric("f1_macro",        f1_macro)
+    mlflow.log_metric("f1_weighted",     f1_weighted)
+    mlflow.log_metric("precision_macro", prec_macro)
+    mlflow.log_metric("recall_macro",    rec_macro)
 
     print(f"[+] Accuracy : {acc:.4f}")
     print(f"[+] F1 Score : {f1:.4f}")
@@ -186,7 +189,6 @@ with mlflow.start_run(run_name="RandomForest_CI_Run") as run:
     import pickle
     with open("model_output/model.pkl", "wb") as f:
         pickle.dump(model, f)
-
     mlflow.log_artifact("model_output/model.pkl", artifact_path="model_pkl")
 
     print(f"[✓] Run selesai! Run ID: {run.info.run_id}")
