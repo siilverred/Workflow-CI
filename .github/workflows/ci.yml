@@ -52,7 +52,28 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build Docker with mlflow build-docker
+        env:
+          MLFLOW_TRACKING_URI: https://dagshub.com/siilverred/SMSML_Charlene-Silver.mlflow
+          MLFLOW_TRACKING_USERNAME: siilverred
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app:latest -f MLProject/Dockerfile MLProject
+          # Ambil artifact URI dari run terbaru
+          MODEL_URI=$(python -c "
+          import mlflow, os
+          mlflow.set_tracking_uri('https://dagshub.com/siilverred/SMSML_Charlene-Silver.mlflow')
+          client = mlflow.tracking.MlflowClient()
+          versions = client.search_model_versions(\"name='IBM_Attrition_Model_CharleneSilver'\")
+          latest = sorted(versions, key=lambda x: int(x.version), reverse=True)[0]
+          print(latest.source)
+          ")
+          echo "Model URI: $MODEL_URI"
+
+          mlflow models build-docker \
+            --model-uri "$MODEL_URI" \
+            --name ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app \
+            --env-manager=local
+
+      - name: Push Docker Image
+        run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app:latest

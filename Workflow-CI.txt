@@ -1,0 +1,5 @@
+Tautan Repositori GitHub Proyek:
+https://github.com/siilverred/Workflow-CI
+
+Tautan Repositori Image Docker Hub Publik:
+https://hub.docker.com/r/siilvered/mlops-attrition-app
