@@ -53,13 +53,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
-        env:
-          MLFLOW_TRACKING_USERNAME: siilverred
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          mlflow models build-docker \
-            --model-uri "models:/IBM_Attrition_Model_CharleneSilver/latest" \
-            --name ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app \
-            --env-manager=local
-          
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app:latest -f MLProject/Dockerfile MLProject
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlops-attrition-app:latest
